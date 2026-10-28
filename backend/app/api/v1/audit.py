@@ -42,3 +42,58 @@ def verify_audit_ledger(db: Session = Depends(get_db)):
     """
     return verify_audit_chain(db)
 
+
+@router.post("/simulate-tamper")
+def simulate_audit_tampering(db: Session = Depends(get_db)):
+    """
+    SECURITY ARENA DEMO: Deliberately mutates the payload of the most recent audit block
+    to demonstrate live cryptographic tamper detection.
+    """
+    latest = db.query(TrustCapsuleEntry).order_by(TrustCapsuleEntry.entry_id.desc()).first()
+    if not latest:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No audit blocks found to tamper.")
+
+    # Save original if not already saved
+    if "_original_payload" not in latest.payload_json:
+        tampered_data = dict(latest.payload_json)
+        tampered_data["_original_payload"] = dict(latest.payload_json)
+        tampered_data["tamper_injected_by"] = "SECURITY_ARENA_ATTACK_SIMULATOR"
+        tampered_data["condition_forgery"] = "All damages erased by unauthorized SQL injection"
+        latest.payload_json = tampered_data
+        db.commit()
+        db.refresh(latest)
+        return {
+            "status": "TAMPER_INJECTED",
+            "tampered_block_id": latest.entry_id,
+            "block_hash": latest.block_hash,
+            "message": f"Block #{latest.entry_id} payload altered directly in SQL database. Run chain verification to test detection.",
+        }
+    else:
+        return {
+            "status": "ALREADY_TAMPERED",
+            "tampered_block_id": latest.entry_id,
+            "message": f"Block #{latest.entry_id} is already in a tampered state.",
+        }
+
+
+@router.post("/repair-ledger")
+def repair_audit_ledger(db: Session = Depends(get_db)):
+    """
+    SECURITY ARENA DEMO: Restores tampered blocks back to their original state.
+    """
+    all_blocks = db.query(TrustCapsuleEntry).all()
+    count = 0
+    for block in all_blocks:
+        payload = dict(block.payload_json or {})
+        if "_original_payload" in payload:
+            block.payload_json = payload["_original_payload"]
+            count += 1
+    if count > 0:
+        db.commit()
+    return {
+        "status": "LEDGER_RESTORED",
+        "repaired_blocks": count,
+        "message": f"Restored {count} tampered blocks to original valid state.",
+    }
+
+

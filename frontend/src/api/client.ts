@@ -144,3 +144,26 @@ export async function verifyAuditChain(): Promise<ChainVerification> {
   return res.json();
 }
 
+export async function simulateTamper(): Promise<{ status: string; tampered_block_id: number; message: string }> {
+  const res = await fetch(`${API_BASE}/audit/simulate-tamper`, {
+    method: 'POST',
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ detail: 'Simulation failed' }));
+    throw new Error(error.detail || 'Failed to simulate tamper');
+  }
+  return res.json();
+}
+
+export async function repairLedger(): Promise<{ status: string; repaired_blocks: number; message: string }> {
+  const res = await fetch(`${API_BASE}/audit/repair-ledger`, {
+    method: 'POST',
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ detail: 'Repair failed' }));
+    throw new Error(error.detail || 'Failed to repair ledger');
+  }
+  return res.json();
+}
+
+
