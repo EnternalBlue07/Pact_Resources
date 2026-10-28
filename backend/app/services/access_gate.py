@@ -70,3 +70,4 @@ def evaluate_eligibility(db: Session, resource_id: str, user_id: str) -> Eligibi
         quota_available=quota_available,
         explanation=explanation,
     )
+

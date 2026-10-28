@@ -100,3 +100,4 @@ def test_trust_capsule_tamper_detection():
     latest_block.payload_json = original_payload
     db.commit()
     db.close()
+

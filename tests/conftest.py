@@ -162,3 +162,4 @@ def setup_test_database():
             TEST_DB_PATH.unlink()
         except Exception:
             pass
+

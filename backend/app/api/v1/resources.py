@@ -131,3 +131,4 @@ def check_eligibility(
 ):
     """Zero-Trust Access Gate: evaluate whether user meets prerequisite safety certifications."""
     return evaluate_eligibility(db=db, resource_id=resource_id, user_id=user_id)
+

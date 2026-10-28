@@ -172,3 +172,4 @@ class ChainVerificationResult(BaseModel):
     total_blocks_verified: int
     tampered_block_ids: List[int] = []
     message: str
+

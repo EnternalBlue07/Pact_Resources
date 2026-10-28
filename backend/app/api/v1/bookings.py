@@ -249,3 +249,4 @@ def reject_booking(
     )
 
     return booking
+

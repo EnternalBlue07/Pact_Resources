@@ -238,3 +238,4 @@ class TrustCapsuleEntry(Base):
 
     resource = relationship("Resource", back_populates="audit_entries")
     booking = relationship("Booking", back_populates="audit_entries")
+

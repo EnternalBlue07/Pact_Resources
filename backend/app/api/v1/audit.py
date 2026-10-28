@@ -41,3 +41,4 @@ def verify_audit_ledger(db: Session = Depends(get_db)):
     Returns 200 OK with detailed validation breakdown. Detects unauthorized direct SQL tampering.
     """
     return verify_audit_chain(db)
+

@@ -126,3 +126,4 @@ def inspect_return(inspect_req: ReturnInspectRequest, db: Session = Depends(get_
         )
 
     return booking
+
