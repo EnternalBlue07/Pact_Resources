@@ -145,3 +145,4 @@
 - **Security & Privacy**: Attack simulation endpoints run in isolated test sandboxes and cannot corrupt production bookings.
 - **Verification**: Navigating to `/security-arena` and clicking "Simulate Replay Attack" triggers an API call and renders the HTTP 400 rejection in real-time.
 - **Reversal Conditions**: None; high-value differentiator for competitive evaluation.
+

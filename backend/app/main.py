@@ -4,6 +4,7 @@ FastAPI Backend Application Entrypoint
 CodeHack India 2026
 """
 
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 from fastapi import FastAPI, Request, status
@@ -11,10 +12,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-try:
-    from app.core.config import settings
-except ImportError:
-    from backend.app.core.config import settings
+from app.core.config import settings
+from app.core.database import engine, Base
+from app.api.v1.router import api_v1_router
+# Import models to ensure they register on Base.metadata
+import app.models.entities  # noqa: F401
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan context initializing database tables on startup."""
+    Base.metadata.create_all(bind=engine)
+    yield
 
 
 class StandardErrorResponse(BaseModel):
@@ -44,6 +53,7 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+    lifespan=lifespan,
 )
 
 # CORS Middleware
@@ -54,6 +64,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include API v1 Routes
+app.include_router(api_v1_router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get(
@@ -97,7 +110,7 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content=StandardErrorResponse(
             error_code="INTERNAL_SERVER_ERROR",
-            message="An unexpected server error occurred. Please contact the administrator.",
+            message=str(exc) if settings.APP_DEBUG else "An unexpected server error occurred.",
             details={"path": str(request.url.path)} if settings.APP_DEBUG else None,
             timestamp=datetime.now(timezone.utc).isoformat(),
         ).model_dump(),

@@ -187,3 +187,4 @@ The **Security Arena** provides controlled interactive test harnesses for hackat
    - Step 1: Directly mutate condition report text inside the database.
    - Step 2: Call `GET /api/v1/audit/verify-chain`.
    - Expected Output: `Status: INTEGRITY_BREACH_DETECTED`, pointing directly to the compromised block ID.
+

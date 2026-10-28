@@ -38,3 +38,4 @@ def test_app_metadata():
     assert app.title == "PACT API"
     assert "Proof, Authorization, Custody & Trust" in app.description
     assert app.version == "0.1.0"
+

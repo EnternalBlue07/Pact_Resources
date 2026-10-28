@@ -31,3 +31,4 @@ jobs:
       - name: Execute Automated Test Suite
         run: |
           python -m pytest tests/test_health.py -v
+

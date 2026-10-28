@@ -174,3 +174,4 @@ All API errors return a consistent, machine-parseable JSON format:
 - **Integration Tests**: FastAPI endpoint tests using `pytest` and `httpx` async test client.
 - **Concurrency Tests**: Dispatches concurrent async requests to assert `409 Conflict` on race conditions.
 - **Security Arena**: Live diagnostic endpoints executing simulated red-team attacks to verify server defense mechanisms.
+
