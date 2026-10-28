@@ -3,146 +3,167 @@
 > **Proof, Authorization, Custody & Trust**  
 > *Proof Before Access. Evidence After Return.*
 
-[![Status](https://img.shields.io/badge/Status-Initial%20Setup%20Only-orange.svg)](#development-status)
-[![Hackathon](https://img.shields.io/badge/Hackathon-CodeHack%20India-blue.svg)](https://codehackindia.com)
+[![Status](https://img.shields.io/badge/Status-Initial%20Setup%20%26%20Engineering%20Foundation-orange.svg)](#current-implementation-status)
+[![Hackathon](https://img.shields.io/badge/Hackathon-CodeHack%20India%202026-blue.svg)](https://codehackindia.com)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Repository](https://img.shields.io/badge/GitHub-EnternalBlue07%2FPact__Resources-181717.svg?logo=github)](https://github.com/EnternalBlue07/Pact_Resources)
 
 ---
 
-## Important Notice: Hackathon Development Status
+## 1. Project Purpose & Problem Statement
+
+Modern educational, research, and technical institutions invest millions in high-value physical assets:
+- **Specialized Equipment**: Oscilloscopes, spectrum analyzers, 3D printers, laser cutters, clean-room equipment, digital microscopes.
+- **Shared Spaces**: Robotics test enclosures, podcast/sound studios, prototyping bays, clean rooms.
+
+Despite high demand from students and researchers, these assets sit idle up to 80% of the week because:
+1. **The Custody Void**: Lab technicians and department heads fear unaccounted damage, component theft, or missing accessories with zero recourse.
+2. **Opaque Discovery**: Students cannot view real-time asset availability or technical specifications across departmental silos.
+3. **Ambiguous Prerequisite Verification**: No automated gatekeeping to verify if a student holds safety training (e.g. Laser Safety Level 1).
+4. **Monopolization**: Well-connected senior researchers hoard equipment without usage quotas or fair waitlists.
+5. **No Auditable Traceability**: Paper registers and informal chats leave no tamper-evident proof when equipment breaks.
+
+**PACT transforms resource lending from an informal risk into a verifiable, auditable custody contract.**
+
+---
+
+## 2. Target Users & Stakeholders
+
+- **Requesters (Students / Researchers / Club Leads)**: Discover equipment, verify prerequisite qualifications, book slots, and protect themselves with pre-use baseline photographic evidence.
+- **Resource Custodians (Lab Technicians / Faculty)**: Define eligibility rules, approve/reject requests, conduct 15-minute dual-acknowledgement handovers, and inspect returns.
+- **Department Administrators (Lab Directors / Deans)**: Review flagged damage incidents, adjudicate student appeals, and manage fair allocation quotas.
+- **Compliance Auditors (Campus Inspectors / Safety Officers)**: Inspect the Trust Replay timeline and cryptographically verify the SHA-256 hash ledger.
+
+---
+
+## 3. Core Capabilities & Planned Differentiators
+
+- **10-Step Custody Lifecycle**: Discovery ➔ Eligibility ➔ Request ➔ Approval ➔ Handover ➔ Active Custody ➔ Return ➔ Incident Review ➔ Audit Chaining.
+- **Zero-Trust Access Gate**: Server-side verification of prerequisite safety training and active concurrency quotas before booking can proceed.
+- **Dual-Ack Handover Handshake**: 15-minute single-use cryptographic tokens ensuring borrower and custodian are physically co-present at checkout.
+- **Trust Capsule**: Tamper-evident transaction ledger chaining every lifecycle transition via cryptographic SHA-256 hashes.
+- **Trust Replay**: Interactive chronological timeline rendering the verifiable custody history of any physical resource.
+- **Fair Access Engine**: Anti-monopolization quota engine (max 2 active bookings/student), cooldown windows, and automated waitlists.
+- **Security Arena**: Built-in test harness allowing evaluators to simulate attack vectors (token replay, double booking race, privilege escalation, audit tampering) live in the browser.
+
+---
+
+## 4. Current Implementation Status
 
 > [!IMPORTANT]
-> **DEVELOPMENT STATUS: INITIAL SETUP & DOCUMENTATION ONLY**  
-> This repository contains project governance, architectural specifications, workflow diagrams, test plans, and planning artifacts created prior to the official **CodeHack India** 48-hour build window.  
-> **No functional application code, APIs, databases, authentication systems, or UI components have been pre-implemented.**  
-> In accordance with hackathon rules, all functional software will be designed and implemented exclusively during the official competition build window.
+> **PHASE: ENGINEERING FOUNDATION & ARCHITECTURAL SPECIFICATION**  
+> All architectural patterns, state machines, API contracts, database schemas, test plans, and planning registers have been established.  
+> **Functional application components are under active development in Milestone 1.**
+
+| Capability / Module | Implementation Status | Tracking Task |
+| :--- | :---: | :--- |
+| **Architectural Specifications & ADRs** | **COMPLETE** | [DECISIONS.md](DECISIONS.md), [FLOW.md](FLOW.md) |
+| **API Contracts & Data Schemas** | **COMPLETE** | [docs/API_CONTRACTS.md](docs/API_CONTRACTS.md), [ARCHITECTURE.md](ARCHITECTURE.md) |
+| **Backend Scaffolding & Health API** | **IN PROGRESS** | [TSK-P0-01](IMPLEMENTATION_PLAN.md#1-p0-tasks--mandatory-end-to-end-core-lifecycle) |
+| **Catalog CRUD & Search API** | Planned (Milestone 1) | [TSK-P0-03](IMPLEMENTATION_PLAN.md) |
+| **Zero-Trust Gate & Eligibility Checks** | Planned (Milestone 1) | [TSK-P0-04](IMPLEMENTATION_PLAN.md) |
+| **Booking State Machine & Concurrency Locks** | Planned (Milestone 1) | [TSK-P0-05](IMPLEMENTATION_PLAN.md) |
+| **Dual-Ack 15-Min Handover Tokens** | Planned (Milestone 2) | [TSK-P0-07](IMPLEMENTATION_PLAN.md) |
+| **Return Inspection & Incident Review** | Planned (Milestone 2) | [TSK-P0-08](IMPLEMENTATION_PLAN.md) |
+| **Trust Capsule SHA-256 Hash Chaining** | Planned (Milestone 3) | [TSK-P1-01](IMPLEMENTATION_PLAN.md) |
+| **Security Arena Diagnostic Console** | Planned (Milestone 3) | [TSK-P2-01](IMPLEMENTATION_PLAN.md) |
 
 ---
 
-## 1. Problem Being Addressed
+## 5. Technology Stack
 
-Universities, research institutes, and educational organizations house valuable equipment (microscopes, oscilloscopes, 3D printers, testing kits) and specialized spaces (robotics labs, audio booths, clean rooms) that frequently sit idle or underutilized. Meanwhile, students, researchers, and junior staff struggle to access these resources due to:
-
-1. **Fragmented, Opaque Discovery**: No unified catalog of available equipment, capabilities, and real-time status.
-2. **Ambiguous Eligibility & Bureaucracy**: Lack of clear prerequisite tracking (training certifications, departmental permissions, supervisor approvals).
-3. **The "Custody Void" & Fear of Damage**: Resource owners hesitate to lend expensive assets due to fears of unaccounted damage, disputes over equipment condition, or loss without clear evidence.
-4. **Unfair Monopolization**: Powerful labs or senior individuals hoard resources without fair limits, waitlists, or explainable allocation rules.
-5. **No Auditable Accountability**: Reliance on paper sign-in sheets or informal emails that leave no verifiable record when disputes, delays, or safety incidents occur.
-
-For complete context, see [docs/PROBLEM_STATEMENT.md](docs/PROBLEM_STATEMENT.md).
+- **Frontend**: React 18 / 19 + TypeScript (strict mode) + Vite + Tailwind CSS + Lucide Icons.
+- **Backend**: Python 3.12 + FastAPI + Uvicorn ASGI + Pydantic V2.
+- **Database & Persistence**: PostgreSQL 15+ (Production) / SQLite (Local Dev) via SQLAlchemy 2.0.
+- **Security & Integrity**: Stateless JWT Bearer Auth (HMAC-SHA256) + Passlib (Bcrypt) + Cryptographic SHA-256 Chaining.
+- **Testing**: Pytest + HTTPX (Async API tests) + Vitest.
 
 ---
 
-## 2. Proposed Solution: PACT
+## 6. Local Setup & Quick Start Instructions
 
-**PACT (Proof, Authorization, Custody & Trust)** is an open, security-first resource-sharing platform engineered for institutional campuses. PACT transforms resource lending from an informal risk into a trusted, auditable contract between resource owners and borrowers through a complete 10-step lifecycle:
+### Prerequisites
+- Python 3.11 or 3.12 (`python --version`)
+- Node.js 20+ (`node --version`)
+- Git (`git --version`)
 
+### 1. Clone & Configure
+```bash
+git clone https://github.com/EnternalBlue07/Pact_Resources.git
+cd Pact_Resources
+cp .env.example .env
 ```
-[Listing & Search] ➔ [Eligibility Verification] ➔ [Request & Allocation]
-         ➔ [Approval / Waitlist] ➔ [Dual Check-In & Evidence] ➔ [Active Custody]
-         ➔ [Check-Out & Return Evidence] ➔ [Incident / Damage Resolution] ➔ [Audit Ledger]
+
+### 2. Backend Setup & Run
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
 ```
+- Interactive OpenAPI Swagger UI: `http://127.0.0.1:8000/docs`
+- Health check: `http://127.0.0.1:8000/health`
 
----
-
-## 3. Planned Key Differentiators
-
-The following differentiators represent our planned technical innovations for the hackathon build window:
-
-*   **Trust Capsule**: A structured, transaction-level record binding every authorization decision, handover handshake, condition photograph, and return inspection into a tamper-evident hash chain.
-*   **Zero-Trust Access Gate**: Resource-specific gatekeeper validating real-time eligibility (prerequisite certifications, departmental roles, safety verifications) before any booking can proceed.
-*   **Fair Access Engine**: An explainable, rule-based scheduling engine enforcing usage quotas, cool-down periods, priority scoring, and transparent waitlist progression to prevent resource hoarding.
-*   **Trust Replay**: An intuitive, auditable transaction timeline rendering the entire custody history of a resource for owners, department chairs, and compliance auditors.
-*   **Security Arena**: A controlled diagnostic testing suite used to simulate and verify defenses against double-booking races, expired token replays, unauthorized privilege escalation, and evidence tampering.
-
-*(Note: These are planned technical capabilities to be built during the 48-hour hackathon, not pre-existing features.)*
-
----
-
-## 4. Planned Technology Stack (Provisional)
-
-> [!NOTE]
-> All technological selections below are **provisional proposals** developed for team alignment. Final adoption will be validated during the initial milestone of the hackathon build window.
-
-| Component | Proposed Technology | Rationale |
-| :--- | :--- | :--- |
-| **Frontend** | React (Vite) + TypeScript + Tailwind CSS | Rapid prototyping, type safety, responsive design, component modularity |
-| **Backend** | Python + FastAPI | High-performance asynchronous execution, automatic OpenAPI documentation, clean data validation |
-| **Database** | PostgreSQL (with SQLAlchemy 2.0 / Alembic) | Robust ACID relational integrity for bookings, state transitions, and audit records; SQLite local fallback |
-| **Integrity & Security**| Cryptographic Hashing (SHA-256) + JWT | Tamper-evident ledger chaining and single-use, time-bound handover tokens |
-| **Testing** | Pytest (Backend) + Vitest / Playwright (Frontend) | Automated verification of positive flows, negative security boundary checks, and race conditions |
-
----
-
-## 5. Repository Structure
-
+### 3. Frontend Setup & Run
+```bash
+cd ../frontend
+npm install
+npm run dev
 ```
-pact-resource-trust/
-├── README.md                      # Project manifesto, status, and overview
-├── LICENSE                        # MIT License
-├── .gitignore                     # Git ignore rules for node, python, secrets, databases
-├── .editorconfig                  # Formatting and encoding conventions
-├── .env.example                   # Environment configuration template (zero secrets)
-├── CONTRIBUTING.md                # Collaboration, branching, and pull request guidelines
-├── SECURITY.md                    # Vulnerability reporting and security standards
-├── CHANGELOG.md                   # Chronological project history
-├── docs/                          # Architectural & specification documentation
-│   ├── PROJECT_OVERVIEW.md        # Institutional context, personas, and boundary definitions
-│   ├── PROBLEM_STATEMENT.md       # Official CodeHack India requirements & lifecycle
-│   ├── REQUIREMENTS.md            # Prioritized P0/P1/P2 specifications with acceptance criteria
-│   ├── PRODUCT_WORKFLOW.md        # State transitions, normal and exception lifecycles
-│   ├── ARCHITECTURE.md            # Proposed system diagrams and component architecture
-│   ├── DATA_MODEL.md              # Conceptual database entities and relationships
-│   ├── API_CONTRACTS.md           # Draft REST API interfaces for parallel development
-│   ├── SECURITY_MODEL.md          # Zero-trust controls, tokens, and audit integrity
-│   ├── FAIRNESS_AND_ACCESSIBILITY.md # Quotas, explainable waitlists, and UX accessibility
-│   ├── TEST_PLAN.md               # Test matrix of planned positive and negative tests
-│   ├── DEPLOYMENT.md              # Hosting strategy and deployment checklist
-│   ├── KNOWN_LIMITATIONS.md       # Explicit scope boundaries of the 48-hour prototype
-│   ├── FUTURE_SCOPE.md            # Post-hackathon institutional roadmap
-│   ├── TEAM_CONTRIBUTIONS.md      # Team member roles, task ledger, and verification
-│   ├── TECHNOLOGY_DISCLOSURE.md   # Attribution for tools, libraries, APIs, and AI usage
-│   ├── JUDGING_SCORECARD.md       # Mapping of features to the 100-point judging rubric
-│   └── SUBMISSION_CHECKLIST.md    # Pre-submission verification checklist
-├── planning/                      # Sprint planning and project management
-│   ├── TEAM_TASK_BOARD.md         # Prioritized task board across 4 workstreams
-│   ├── MILESTONES.md              # 48-hour sprint milestone timeline
-│   ├── DECISIONS.md               # Architecture Decision Records (ADRs)
-│   └── DEMO_SCRIPT.md             # Judge demonstration narrative and walkthrough
-├── frontend/                      # Frontend application package (to be built)
-│   └── README.md                  # Frontend setup guide and component standards
-├── backend/                       # Backend service package (to be built)
-│   └── README.md                  # Backend setup guide and API structure
-├── tests/                         # End-to-end and integration test suite (to be built)
-│   └── README.md                  # Test running guide and fixture notes
-└── .github/                       # GitHub workflow and issue templates
-    ├── ISSUE_TEMPLATE/
-    │   └── task.md                # Task issue template
-    └── pull_request_template.md   # Standard pull request checklist
+- Web Application: `http://localhost:5173`
+
+---
+
+## 7. Testing Instructions
+
+```bash
+# Run backend unit and integration test suite
+pytest -v
+
+# Run with coverage report
+pytest --cov=app tests/
+
+# Run security and concurrency tests specifically
+pytest -v tests/test_security_arena.py tests/test_booking_state.py
 ```
 
 ---
 
-## 6. Team Collaboration & Roles
+## 8. Environment Variables Setup
 
-PACT is being developed by a 4-member student team for CodeHack India:
+Configure `.env` from [.env.example](.env.example). **Never commit real secrets.**
 
-| Member | Provisional Workstream | Primary Responsibilities |
-| :--- | :--- | :--- |
-| **Member 1** | Frontend & Integration | React UI, state management, handover UX, Trust Replay visualizer |
-| **Member 2** | Backend & Database | FastAPI REST APIs, PostgreSQL schema, state machine transitions, booking validation |
-| **Member 3** | Security & Audit Integrity | Zero-Trust Access Gate, token signing/verification, Trust Capsule hash chaining |
-| **Member 4** | Lifecycle, Incidents & QA | Return inspections, incident workflow, automated test suite, demo orchestration |
-
-*(Individual names and confirmed responsibilities will be recorded in [docs/TEAM_CONTRIBUTIONS.md](docs/TEAM_CONTRIBUTIONS.md) upon team onboarding).*
+```env
+APP_ENV=development
+APP_HOST=127.0.0.1
+APP_PORT=8000
+DATABASE_URL=sqlite:///./pact_dev.db
+JWT_SECRET_KEY=change_me_to_a_secure_random_string_for_local_dev_only
+JWT_ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+HANDOVER_TOKEN_EXPIRE_MINUTES=15
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+```
 
 ---
 
-## 7. Next Steps: Hackathon Build Phase
+## 9. Living Project Documentation Links
 
-When the official CodeHack India build window commences, implementation will proceed according to [planning/MILESTONES.md](planning/MILESTONES.md):
-1. **Hour 0–4**: Team alignment on API contracts ([docs/API_CONTRACTS.md](docs/API_CONTRACTS.md)) and database schema ([docs/DATA_MODEL.md](docs/DATA_MODEL.md)).
-2. **Hour 4–24**: Implementation of P0 core end-to-end lifecycle (Listing ➔ Booking ➔ Handover ➔ Return).
-3. **Hour 24–36**: Implementation of P1 Trust Capsule hash chains, Fair Access rules, and incident handling.
-4. **Hour 36–44**: Automated test execution, security regression testing, and bug fixing.
-5. **Hour 44–48**: Deployment, live verification, video demo recording, and submission.
+- **[DECISIONS.md](DECISIONS.md)** — Architectural Decision Records (ADRs) explaining *why* we chose the design.
+- **[FLOW.md](FLOW.md)** — State machine transitions, authority matrix, and visual Mermaid diagrams.
+- **[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)** — Prioritized task ledger, acceptance criteria, and status.
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** — Detailed subsystem responsibilities, database schemas, and data flow.
+- **[SECURITY.md](SECURITY.md)** — Zero-trust access controls, handover tokens, threat matrix, and audit limitations.
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — Branch naming, commit standards, pull request rules, and team coordination.
+- **[docs/PROBLEM_STATEMENT.md](docs/PROBLEM_STATEMENT.md)** — Official CodeHack India requirements & 100-point judging rubric.
+- **[docs/API_CONTRACTS.md](docs/API_CONTRACTS.md)** — REST API schemas for parallel frontend/backend development.
+- **[docs/TEAM_CONTRIBUTIONS.md](docs/TEAM_CONTRIBUTIONS.md)** — Transparent 4-member contribution tracking ledger.
+
+---
+
+## 10. Current Prototype Limitations
+
+1. **Tamper-Evident vs. Tamper-Proof**: Internal cryptographic hash chaining detects unauthorized data tampering, but does not provide external blockchain consensus immutability against database root administrators.
+2. **Simulated Hardware**: Dual-acknowledgement tokens are verified via digital web interfaces rather than physical IoT turnstiles or RFID badge scanners.
+3. **Condition Inspection**: Photographically documented with side-by-side human review rather than automated computer vision defect detection.

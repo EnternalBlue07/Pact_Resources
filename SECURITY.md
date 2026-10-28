@@ -1,23 +1,80 @@
-# Security Policy
+# PACT: Security Model, Trust Boundaries & Vulnerability Policy
 
-## Scope & Purpose
+> **Repository**: https://github.com/EnternalBlue07/Pact_Resources  
+> **Classification**: Security Architecture & Threat Model (CodeHack India 2026)
 
-PACT (Proof, Authorization, Custody & Trust) is an academic hackathon prototype created for **CodeHack India**. This repository establishes security controls and standards for institutional resource sharing.
+---
 
-## Reporting a Security Concern or Vulnerability
+## 1. Security Philosophy: Zero-Trust Institutional Access
 
-If you identify a vulnerability, potential data exposure, or credential leak:
+Traditional campus equipment reservation systems operate on implicit trust: whoever logs into the web portal can request any item, and checkouts are tracked on paper sign-in sheets.
 
-1. **Do not create a public issue** disclosing sensitive exploits or credentials.
-2. Immediately notify the repository maintainers or team members via private channels.
-3. If an API key, database secret, or credential is accidentally committed, immediately revoke/rotate the credential, purge it from Git history, and notify the team.
+PACT implements **Zero-Trust Access Gatekeeping**:
+1. **Never trust client assertions**: Every permission, certification, and quota check is executed strictly on the backend.
+2. **Explicit physical handshakes**: Custody only transfers when borrower and custodian execute a dual-acknowledgement handshake using a single-use, 15-minute token.
+3. **Evidence-backed custody**: Every checkout and return requires photographic baseline records and structured condition checklists.
+4. **Tamper-evident auditability**: All state transitions produce cryptographic SHA-256 chained blocks.
 
-## Hackathon Security Principles
+---
 
-1. **No Real Secrets in Version Control**: All configuration must use environment variables loaded from `.env` (excluded by `.gitignore`). Use `.env.example` as a template with placeholder values only.
-2. **Synthetic Data Only**: All test accounts, equipment records, and user identities used during development, testing, and judging demos must be strictly synthetic. Never use real student ID numbers, phone numbers, or private documents.
-3. **Defense in Depth**:
-   - All authorization checks must be enforced server-side.
-   - Handover tokens must be short-lived, single-use, and cryptographically verified.
-   - Audit trail records must be cryptographically hashed to provide tamper evidence.
-4. **Human Oversight**: The platform incorporates human review for any dispute, condition mismatch, or incident resolution.
+## 2. Role-Based Access Control (RBAC) & Authority Matrix
+
+| Role | Permitted Actions | Prohibited Actions | Enforcement Mechanism |
+| :--- | :--- | :--- | :--- |
+| **`REQUESTER`** | Browse catalog, check eligibility, submit booking requests, generate handover token, upload return evidence, submit dispute appeal. | Cannot approve own requests. Cannot inspect returns. Cannot resolve damage incidents. | Server-side dependency: `Depends(require_role(["REQUESTER", "ADMINISTRATOR"]))` |
+| **`CUSTODIAN`** | Create resources, define prerequisite rules, approve/reject bookings, verify check-in tokens, inspect returns, flag damage incidents. | Cannot approve resources outside their department. Cannot unilaterally delete or rewrite audit records. | Server-side dependency + resource custodial ownership check. |
+| **`ADMINISTRATOR`** | Review flagged damage incidents, adjudicate appeals, assess repair penalties or waivers, manage user quotas. | Cannot assess automated penalties without documenting human justification. | Server-side dependency: `Depends(require_role(["ADMINISTRATOR"]))` |
+| **`AUDITOR`** | Read-only inspection of Trust Replay timeline, verification of cryptographic hash chains, export audit logs. | Cannot create, modify, or delete operational data. | Server-side dependency: `Depends(require_role(["AUDITOR"]))` |
+
+---
+
+## 3. Defense-in-Depth Mechanisms
+
+### 3.1. Handover Token Expiry & Replay Prevention
+- When a borrower arrives at the physical lab, they request a token via `POST /api/v1/handovers/generate-token`.
+- The server generates an ephemeral 6-digit code with an exact **15-minute validity window**.
+- The token is hashed with SHA-256 before storage; the plaintext token is never stored at rest.
+- When the custodian verifies the token (`POST /api/v1/handovers/verify`), the database marks `is_spent = True` within an atomic transaction.
+- **Replay Protection**: Any subsequent submission of the same token immediately returns `HTTP 400 Bad Request: Token already spent`.
+
+### 3.2. Concurrency Control & Double-Booking Protection
+- Booking submissions acquire a database row-level lock (`SELECT ... FOR UPDATE` in PostgreSQL / serialized transactions in SQLite).
+- The query checks for overlapping intervals:
+  $$\text{NOT } (\text{existing.end} \le \text{new.start} \lor \text{existing.start} \ge \text{new.end})$$
+- Overlapping requests receive `HTTP 409 Conflict: Slot already reserved`.
+
+### 3.3. Audit-Integrity Limitations (Honest Disclosure)
+- **Tamper-Evident, NOT Tamper-Proof**: PACT implements cryptographic SHA-256 hash chaining stored within the application database.
+- *What it guarantees*: Any unauthorized direct SQL update to an existing condition report, actor ID, or timestamp breaks the hash continuity. Calling `/api/v1/audit/verify-chain` immediately flags the tampered record.
+- *What it does NOT guarantee*: A rogue database superuser with direct root SQL access could hypothetically overwrite a record and recompute all forward hashes. True immutability requires anchoring hash roots into an external decentralized ledger or timestamping authority (planned in [docs/FUTURE_SCOPE.md](docs/FUTURE_SCOPE.md)).
+
+### 3.4. Evidence Access & Personal Data Privacy
+- **Minimal PII**: The platform only stores institutional email, full name, department, and safety qualification keys.
+- **Evidence Storage**: Condition photographs are assigned cryptographically random UUID filenames (`uuid4().hex`) and stored in non-public directories. Access is restricted to authorized booking participants, custodians, and compliance auditors.
+- **Zero Real Secrets in Git**: Passwords and secrets are strictly loaded from environment variables (`.env`). `.env` is ignored in `.gitignore`.
+
+### 3.5. Safe Security Arena Execution
+- The in-app **Security Arena** allows evaluators to simulate attack vectors (token replay, double booking race, privilege escalation, audit tampering).
+- Attack endpoints operate against isolated test sandbox data and **never corrupt production resource records**.
+
+---
+
+## 4. Implemented vs. Intended Security Protections
+
+| Security Control | Implementation Status | Verification Method |
+| :--- | :---: | :--- |
+| **Server-Side RBAC Enforcement** | **Planned (Milestone 1)** | Pytest test asserts unauthorized roles receive HTTP 403. |
+| **15-Min Single-Use Handover Token**| **Planned (Milestone 2)** | Pytest asserts replayed tokens return HTTP 400. |
+| **Double-Booking Database Locks** | **Planned (Milestone 1)** | Concurrent async test asserts HTTP 409 on race conditions. |
+| **Trust Capsule SHA-256 Chaining** | **Planned (Milestone 3)** | Tamper test mutates DB and asserts hash validation alert. |
+| **Human Oversight for Incidents** | **Planned (Milestone 3)** | Incident workflow prevents automated penalties. |
+| **Campus LDAP / SAML 2.0 SSO** | **Deferred (Future Scope)**| Simulated with local institutional demo roles. |
+
+---
+
+## 5. Vulnerability Disclosure & Reporting
+
+If you identify a security vulnerability, credential leak, or authorization bypass:
+1. **Do not open a public GitHub issue** disclosing exploit payloads.
+2. Privately notify the repository maintainers or team leads.
+3. If an API key or password is accidentally committed, immediately revoke/rotate the secret and purge the commit history.

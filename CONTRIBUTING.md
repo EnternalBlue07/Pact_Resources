@@ -1,47 +1,76 @@
 # Contributing to PACT
 
-Thank you for contributing to **PACT (Proof, Authorization, Custody & Trust)** for **CodeHack India**.
+> **Hackathon**: CodeHack India 2026 (48-hour build)  
+> **Repository**: https://github.com/EnternalBlue07/Pact_Resources
 
-## 1. Development Integrity & Hackathon Policy
+Thank you for contributing to **PACT (Proof, Authorization, Custody & Trust)**. These lightweight engineering guidelines ensure seamless parallel collaboration across our 4-member student team during the sprint.
 
-All implementation must take place during the official CodeHack India build window. Pre-built functional code or third-party solutions that violate competition guidelines are strictly prohibited.
+---
 
-- **Current Repository Phase**: Repository and documentation initialization only.
-- **Honest Attribution**: All team contributions must be recorded transparently in [TEAM_CONTRIBUTIONS.md](docs/TEAM_CONTRIBUTIONS.md).
+## 1. Branch Naming & Git Conventions
 
-## 2. Branch Naming Conventions
+All work must occur on descriptive feature branches branched from `main`:
 
-All team members must work on feature branches branched from `main` (or `master`):
+- `feat/<short-description>`: New functionality (e.g. `feat/catalog-search-api`, `feat/handover-token-modal`)
+- `fix/<short-description>`: Defect or bug repair (e.g. `fix/timezone-booking-conflict`)
+- `docs/<short-description>`: Documentation additions or updates (e.g. `docs/api-contract-freeze`)
+- `test/<short-description>`: Unit, integration, or security arena tests (e.g. `test/concurrency-locks`)
 
-- `feat/<short-description>`: New planned feature implementation (e.g., `feat/booking-request-flow`).
-- `fix/<short-description>`: Bug or defect correction (e.g., `fix/double-booking-race-condition`).
-- `docs/<short-description>`: Documentation additions or revisions (e.g., `docs/update-api-contracts`).
-- `test/<short-description>`: Unit, integration, or end-to-end test cases (e.g., `test/token-expiry-tests`).
-- `refactor/<short-description>`: Code restructuring without functional changes.
+### Commit Messages
+Write short, imperative commit messages using Conventional Commit prefixes:
+- `feat:` New user-facing or API feature
+- `fix:` Bug fix
+- `docs:` Documentation updates only
+- `test:` Adding or modifying tests
+- `chore:` Configuration, dependencies, or maintenance
 
-## 3. Commit Guidelines
+---
 
-- Write small, focused, and descriptive commits.
-- Use Conventional Commit prefixes:
-  - `feat:` New functionality
-  - `fix:` Bug fix
-  - `docs:` Documentation only
-  - `test:` Adding or updating tests
-  - `chore:` Maintenance, dependency updates, configuration
-  - `refactor:` Code refactoring
-- **Never commit secrets**: Check `git status` and diff before committing to ensure `.env` or sensitive credentials are not staged.
+## 2. Shared Contract Alignment (Pre-Coding Agreement)
 
-## 4. Pull Request (PR) Workflow
+Before starting parallel implementation:
+1. **Frontend (Member 1)** and **Backend (Members 2, 3, 4)** must align against the schemas defined in:
+   - [docs/API_CONTRACTS.md](docs/API_CONTRACTS.md) (Endpoints and JSON payloads)
+   - [FLOW.md](FLOW.md) (Booking state machine transitions)
+2. **Contract Changes**: If an endpoint parameter or state transition changes during development, the author **must update the relevant markdown file in the exact same pull request**.
 
-1. Before opening a PR, ensure local tests pass and linters report no syntax or formatting errors.
-2. PR titles should be concise and reference the relevant task from [TEAM_TASK_BOARD.md](planning/TEAM_TASK_BOARD.md).
-3. Use the PR template provided at `.github/pull_request_template.md`.
-4. At least one peer review is required before merging into the main branch.
-5. If an API contract, data model, or workflow behaviour changes, update the relevant documentation in `docs/` simultaneously in the same PR.
+---
 
-## 5. Development Workflow Agreement
+## 3. Pull Request (PR) Workflow
 
-To ensure smooth parallel development across all 4 team members:
-1. **Contracts First**: Shared API contracts ([API_CONTRACTS.md](docs/API_CONTRACTS.md)) and state transition rules ([PRODUCT_WORKFLOW.md](docs/PRODUCT_WORKFLOW.md)) must be agreed upon before frontend and backend work streams diverge.
-2. **Deterministic Mocking**: During initial phases, frontend and backend will align against identical JSON payload schemas.
-3. **Continuous Integration**: Merge frequently to avoid large, breaking merge conflicts near submission deadlines.
+1. Keep PRs small, focused, and scoped to a single task from [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
+2. Use the checklist in `.github/pull_request_template.md`.
+3. Before requesting review:
+   - Ensure local tests pass: `pytest` exits 0.
+   - Ensure linting passes: `ruff check .` exits 0.
+   - Verify that **no secrets, API keys, or `.env` files are staged**.
+4. At least one peer review is required before merging into `main`.
+
+---
+
+## 4. Local Environment Setup
+
+### Backend Setup (Python 3.12+)
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+cp ../.env.example .env
+uvicorn app.main:app --reload --port 8000
+```
+Interactive API documentation: `http://127.0.0.1:8000/docs`
+
+### Frontend Setup (Node.js 20+)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+Local dev application: `http://localhost:5173`
+
+---
+
+## 5. Honest Attribution & Team Ledger
+
+Every team member must log their implemented deliverables, PR references, and verification status in [docs/TEAM_CONTRIBUTIONS.md](docs/TEAM_CONTRIBUTIONS.md) to maintain transparent, honest attribution for CodeHack India evaluation.
