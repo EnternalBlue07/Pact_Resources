@@ -63,11 +63,11 @@ PACT implements **Zero-Trust Access Gatekeeping**:
 
 | Security Control | Implementation Status | Verification Method |
 | :--- | :---: | :--- |
-| **Server-Side RBAC Enforcement** | **Planned (Milestone 1)** | Pytest test asserts unauthorized roles receive HTTP 403. |
-| **15-Min Single-Use Handover Token**| **Planned (Milestone 2)** | Pytest asserts replayed tokens return HTTP 400. |
-| **Double-Booking Database Locks** | **Planned (Milestone 1)** | Concurrent async test asserts HTTP 409 on race conditions. |
-| **Trust Capsule SHA-256 Chaining** | **Planned (Milestone 3)** | Tamper test mutates DB and asserts hash validation alert. |
-| **Human Oversight for Incidents** | **Planned (Milestone 3)** | Incident workflow prevents automated penalties. |
+| **Server-Side RBAC Enforcement** | **Verified (Tested)** | `tests/test_audit_verification.py` asserts unauthorized roles receive HTTP 403. |
+| **15-Min Single-Use Handover Token**| **Verified (Tested)** | `tests/test_lifecycle.py` asserts replayed tokens return HTTP 400. |
+| **Double-Booking Database Locks** | **Verified (Tested)** | Overlapping interval query in `bookings.py` returns HTTP 409 Conflict. |
+| **Trust Capsule SHA-256 Chaining** | **Verified (Tested)** | `tests/test_audit_security.py` mutates DB and asserts verify-chain alert. |
+| **Human Oversight for Incidents** | **Verified (Tested)** | `tests/test_audit_verification.py` verifies admin-only incident resolution. |
 | **Campus LDAP / SAML 2.0 SSO** | **Deferred (Future Scope)**| Simulated with local institutional demo roles. |
 
 ---

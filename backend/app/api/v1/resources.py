@@ -7,7 +7,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.models.entities import Resource, ResourceCategory, ResourceStatus, ResourceRequirement, User
+from app.models.entities import Resource, ResourceCategory, ResourceStatus, ResourceRequirement, User, UserRole
 from app.schemas import ResourceCreate, ResourceOut, EligibilityResponse
 from app.services.access_gate import evaluate_eligibility
 from app.services.trust_capsule import append_audit_block
@@ -48,12 +48,18 @@ def create_resource(
     db: Session = Depends(get_db),
 ):
     """Register a new physical asset or research space with eligibility prerequisites."""
-    # Verify custodian exists
+    # Verify custodian exists and has proper role
     custodian = db.query(User).filter(User.id == resource_in.custodian_id).first()
     if not custodian:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Custodian with ID {resource_in.custodian_id} not found."
+        )
+
+    if custodian.role not in [UserRole.CUSTODIAN, UserRole.ADMINISTRATOR]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"User '{resource_in.custodian_id}' has role '{custodian.role.value}'. Only CUSTODIAN or ADMINISTRATOR can register resources."
         )
 
     # Check asset tag uniqueness

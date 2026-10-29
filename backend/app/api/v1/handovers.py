@@ -19,6 +19,8 @@ from app.models.entities import (
     ConditionReportType,
     Resource,
     ResourceStatus,
+    User,
+    UserRole,
 )
 from app.schemas import TokenGenerateRequest, TokenGenerateResponse, CheckInVerifyRequest, BookingOut
 from app.services.trust_capsule import append_audit_block
@@ -73,6 +75,21 @@ def generate_handover_token(token_req: TokenGenerateRequest, db: Session = Depen
     db.commit()
     db.refresh(token_record)
 
+    # Append Trust Capsule Block for token issuance
+    append_audit_block(
+        db=db,
+        resource_id=booking.resource_id,
+        booking_id=booking.id,
+        event_type="HANDOVER_TOKEN_ISSUED",
+        actor_id=token_req.requester_id,
+        payload={
+            "booking_id": booking.id,
+            "status": booking.status.value,
+            "token_expires_at": expires_at.isoformat(),
+            "validity_minutes": 15,
+        },
+    )
+
     return TokenGenerateResponse(
         booking_id=booking.id,
         handover_token=raw_token,
@@ -87,9 +104,30 @@ def verify_checkin(verify_req: CheckInVerifyRequest, db: Session = Depends(get_d
     Custodian validates the handover token, records pre-use baseline condition,
     and seals the physical custody transfer into the Trust Capsule.
     """
+    # 1. Verify custodian exists and has CUSTODIAN or ADMINISTRATOR role
+    custodian = db.query(User).filter(User.id == verify_req.custodian_id).first()
+    if not custodian:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Custodian with ID '{verify_req.custodian_id}' not found.",
+        )
+
+    if custodian.role not in [UserRole.CUSTODIAN, UserRole.ADMINISTRATOR]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"User '{verify_req.custodian_id}' has role '{custodian.role.value}'. Only CUSTODIAN or ADMINISTRATOR can verify check-in.",
+        )
+
     booking = db.query(Booking).filter(Booking.id == verify_req.booking_id).first()
     if not booking:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found.")
+
+    # 2. Dual-acknowledgement check: Borrower cannot act as custodian
+    if verify_req.custodian_id == booking.requester_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Dual-acknowledgement violation: Custodian verifying check-in cannot be the borrower.",
+        )
 
     if booking.status not in [BookingStatus.APPROVED, BookingStatus.HANDOVER_PENDING]:
         raise HTTPException(

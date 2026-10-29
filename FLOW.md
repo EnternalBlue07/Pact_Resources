@@ -116,16 +116,16 @@ stateDiagram-v2
 | `REQUESTED` | `INFO_NEEDED`| `POST /bookings/{id}/request-info` | `CUSTODIAN` | Question posted to requester; requester notified. |
 | `INFO_NEEDED`| `REQUESTED` | `POST /bookings/{id}/respond-info` | `REQUESTER` | Borrower updates justification or parameters. |
 | `APPROVED` | `HANDOVER_PENDING` | System clock / Handshake init | System / `REQUESTER` | Starts within 15 minutes prior to scheduled start time. |
-| `HANDOVER_PENDING` | `CHECKED_OUT` | `POST /handovers/verify` | `CUSTODIAN` | Handover token must match, be unexpired (<15 min), and marked `is_spent=True`. Pre-use baseline condition report mandatory. |
+| `HANDOVER_PENDING` | `CHECKED_OUT` | `POST /api/v1/handovers/verify-checkin` | `CUSTODIAN` | Handover token must match, be unexpired (<15 min), and marked `is_spent=True`. Dual-acknowledgement enforced (requester cannot self-verify). Pre-use baseline condition report mandatory. |
 | `HANDOVER_PENDING` | `NO_SHOW` | Grace timer expiration | System scheduler | Triggered if token not verified 30 minutes after start time. Releases slot to waitlist. |
-| `CHECKED_OUT` | `RETURNED` | `POST /returns/inspect` | `CUSTODIAN` | Return inspection checklist and post-use photos submitted. |
+| `CHECKED_OUT` | `RETURNED` | `POST /api/v1/returns/inspect` | `CUSTODIAN` | Return inspection checklist and post-use photos submitted. Dual-acknowledgement enforced. |
 | `CHECKED_OUT` | `OVERDUE` | Clock > booking `end_time` | System scheduler | Notification dispatched to borrower and custodian. |
-| `OVERDUE` | `RETURNED` | `POST /returns/inspect` | `CUSTODIAN` | Overdue duration recorded in return payload. |
+| `OVERDUE` | `RETURNED` | `POST /api/v1/returns/inspect` | `CUSTODIAN` | Overdue duration recorded in return payload. |
 | `RETURNED` | `CLOSED` | Inspection Clean | `CUSTODIAN` | No damage flags; Trust Capsule sealed; resource status set to `AVAILABLE`. |
 | `RETURNED` | `INCIDENT_OPEN` | Damage / Discrepancy Flagged | `CUSTODIAN` | Requires description, photographic proof, severity rating. Resource set to `UNDER_MAINTENANCE`. |
-| `INCIDENT_OPEN` | `UNDER_REVIEW` | Review initiated | `ADMINISTRATOR` | Case assigned to human administrator. |
-| `UNDER_REVIEW` | `RESOLVED_WAIVED` | Admin decision | `ADMINISTRATOR` | Justification logged; zero student penalty; resource cleared for repair/booking. |
-| `UNDER_REVIEW` | `RESOLVED_PENALTY` | Admin decision | `ADMINISTRATOR` | Penalty details and disciplinary rationale logged. |
+| `INCIDENT_OPEN` | `UNDER_REVIEW` | Review initiated | `ADMINISTRATOR` | Case assigned to human administrator via `GET /api/v1/returns/incidents`. |
+| `UNDER_REVIEW` | `RESOLVED_WAIVED` | `POST /api/v1/returns/incidents/{id}/resolve` | `ADMINISTRATOR` | Justification logged; zero student penalty; resource cleared for booking; sealed in Trust Capsule. |
+| `UNDER_REVIEW` | `RESOLVED_PENALTY` | `POST /api/v1/returns/incidents/{id}/resolve` | `ADMINISTRATOR` | Penalty details and disciplinary rationale logged; sealed in Trust Capsule. |
 | `RESOLVED_PENALTY`| `APPEAL_PENDING` | `POST /incidents/{id}/appeal` | `REQUESTER` | Requires statement of dispute within 48 hours of resolution. |
 
 ---

@@ -65,6 +65,14 @@ def setup_test_database():
         role=UserRole.REQUESTER,
         active_booking_quota=2,
     )
+    student2 = User(
+        id="u-student-02",
+        email="student2@pact.local",
+        full_name="Priya Patel",
+        department="Materials Science",
+        role=UserRole.REQUESTER,
+        active_booking_quota=10,
+    )
     custodian = User(
         id="u-custodian-01",
         email="custodian@pact.local",
@@ -89,13 +97,17 @@ def setup_test_database():
         role=UserRole.AUDITOR,
         active_booking_quota=10,
     )
-    db.add_all([student, custodian, admin, auditor])
+    db.add_all([student, student2, custodian, admin, auditor])
     db.commit()
 
     # 2. Student Safety Qualifications
     quals = [
         UserQualification(user_id="u-student-01", qualification_key="BASIC_ELECTRONICS_SAFETY"),
         UserQualification(user_id="u-student-01", qualification_key="CAD_3D_PRINTING"),
+        UserQualification(user_id="u-student-02", qualification_key="BASIC_ELECTRONICS_SAFETY"),
+        UserQualification(user_id="u-student-02", qualification_key="CAD_3D_PRINTING"),
+        UserQualification(user_id="u-custodian-01", qualification_key="BASIC_ELECTRONICS_SAFETY"),
+        UserQualification(user_id="u-custodian-01", qualification_key="CAD_3D_PRINTING"),
     ]
     db.add_all(quals)
     db.commit()

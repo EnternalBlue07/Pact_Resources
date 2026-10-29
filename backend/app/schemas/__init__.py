@@ -152,6 +152,29 @@ class ReturnInspectRequest(BaseModel):
     incident_description: Optional[str] = None
 
 
+class IncidentResolveRequest(BaseModel):
+    admin_id: str
+    resolution_notes: str
+    resolution_status: IncidentStatus = IncidentStatus.RESOLVED_WAIVED
+
+
+class IncidentOut(BaseModel):
+    id: str
+    booking_id: str
+    reported_by_id: str
+    incident_type: IncidentType
+    severity: IncidentSeverity
+    description: str
+    photo_evidence_url: Optional[str] = None
+    status: IncidentStatus
+    resolution_notes: Optional[str] = None
+    resolved_by_id: Optional[str] = None
+    resolved_at: Optional[datetime] = None
+    created_at: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+
 # --- AUDIT SCHEMAS ---
 
 class TrustCapsuleBlockOut(BaseModel):

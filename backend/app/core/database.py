@@ -8,19 +8,25 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from app.core.config import settings
 
-# Engine configuration
-connect_args = {}
-if settings.DATABASE_URL.startswith("sqlite"):
-    connect_args["check_same_thread"] = False
+# 1. Normalize Database URL (handle legacy postgres:// prefix from hosted platforms)
+db_url = settings.DATABASE_URL
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    connect_args=connect_args,
-    echo=False,
-)
+# 2. Engine Connection Arguments & Pooling
+engine_kwargs = {"echo": False}
 
-# Enable foreign keys for SQLite
-if settings.DATABASE_URL.startswith("sqlite"):
+if db_url.startswith("sqlite"):
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
+else:
+    # Production PostgreSQL connection health & connection pool settings
+    engine_kwargs["pool_pre_ping"] = True  # Avoid stale/dropped connections
+    engine_kwargs["pool_recycle"] = 300   # Recycle connections every 5 minutes
+
+engine = create_engine(db_url, **engine_kwargs)
+
+# 3. Enable foreign keys for SQLite
+if db_url.startswith("sqlite"):
     @event.listens_for(engine, "connect")
     def set_sqlite_pragma(dbapi_connection, connection_record):
         cursor = dbapi_connection.cursor()
@@ -38,4 +44,3 @@ def get_db() -> Generator[Session, None, None]:
         yield db
     finally:
         db.close()
-

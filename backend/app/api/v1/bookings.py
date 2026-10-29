@@ -5,11 +5,11 @@ CodeHack India 2026
 """
 
 from typing import List, Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.models.entities import Booking, BookingStatus, Resource, User, ResourceStatus
+from app.models.entities import Booking, BookingStatus, Resource, User, UserRole, ResourceStatus
 from app.schemas import BookingCreate, BookingDecision, BookingOut
 from app.services.access_gate import evaluate_eligibility
 from app.services.trust_capsule import append_audit_block
@@ -28,6 +28,14 @@ def create_booking(booking_in: BookingCreate, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid time window: start_time must be earlier than end_time."
+        )
+
+    now = datetime.now(timezone.utc)
+    req_start = booking_in.start_time if booking_in.start_time.tzinfo else booking_in.start_time.replace(tzinfo=timezone.utc)
+    if req_start < now - timedelta(minutes=5):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid start_time: Booking start time cannot be in the past."
         )
 
     # 2. Verify resource exists and is available
@@ -149,9 +157,27 @@ def approve_booking(
     db: Session = Depends(get_db),
 ):
     """Custodian approves a pending booking request."""
+    # 1. Verify custodian exists and has CUSTODIAN or ADMINISTRATOR role
+    custodian = db.query(User).filter(User.id == custodian_id).first()
+    if not custodian:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Custodian with ID '{custodian_id}' not found.")
+
+    if custodian.role not in [UserRole.CUSTODIAN, UserRole.ADMINISTRATOR]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"User '{custodian_id}' has role '{custodian.role.value}'. Only CUSTODIAN or ADMINISTRATOR can approve bookings.",
+        )
+
     booking = db.query(Booking).filter(Booking.id == booking_id).first()
     if not booking:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found.")
+
+    # 2. Dual-acknowledgement check: Borrower cannot approve their own booking
+    if custodian.id == booking.requester_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Dual-acknowledgement violation: Requester cannot approve their own booking.",
+        )
 
     if booking.status != BookingStatus.REQUESTED:
         raise HTTPException(
@@ -211,6 +237,17 @@ def reject_booking(
     db: Session = Depends(get_db),
 ):
     """Custodian rejects a pending booking request with required reason."""
+    # 1. Verify custodian exists and has CUSTODIAN or ADMINISTRATOR role
+    custodian = db.query(User).filter(User.id == custodian_id).first()
+    if not custodian:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Custodian with ID '{custodian_id}' not found.")
+
+    if custodian.role not in [UserRole.CUSTODIAN, UserRole.ADMINISTRATOR]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"User '{custodian_id}' has role '{custodian.role.value}'. Only CUSTODIAN or ADMINISTRATOR can reject bookings.",
+        )
+
     booking = db.query(Booking).filter(Booking.id == booking_id).first()
     if not booking:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found.")

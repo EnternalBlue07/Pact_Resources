@@ -69,6 +69,28 @@ def test_return_with_damage_incident():
     assert resp_res.status_code == 200
     assert resp_res.json()["status"] == "UNDER_MAINTENANCE"
 
+    # Adjudicate & resolve incident so subsequent tests start with a clean state
+    resp_inc = client.get("/api/v1/returns/incidents")
+    assert resp_inc.status_code == 200
+    incidents = resp_inc.json()
+    assert len(incidents) > 0
+    inc_id = incidents[0]["id"]
+
+    resp_resolve = client.post(
+        f"/api/v1/returns/incidents/{inc_id}/resolve",
+        json={
+            "admin_id": "u-admin-01",
+            "decision": "RESOLVED_WAIVED",
+            "resolution_notes": "BNC connector replaced and recalibrated by lab admin.",
+        },
+    )
+    assert resp_resolve.status_code == 200
+
+    # Verify resource status restored to AVAILABLE
+    resp_restored = client.get("/api/v1/resources/res-oscilloscope-01")
+    assert resp_restored.status_code == 200
+    assert resp_restored.json()["status"] == "AVAILABLE"
+
 
 def test_trust_capsule_tamper_detection():
     """
